@@ -23,7 +23,7 @@ public:
     MV_CC_DEVICE_INFO_LIST device_list;
     // enum device
     nRet = MV_CC_EnumDevices(MV_GIGE_DEVICE, &device_list);
-    RCLCPP_INFO(this->get_logger(), "Found camera count = %d", device_list.nDeviceNum);
+    // RCLCPP_INFO(this->get_logger(), "Found camera count = %d", device_list.nDeviceNum);
   
 
     while (device_list.nDeviceNum == 0 && rclcpp::ok()) {
@@ -38,14 +38,19 @@ public:
       std::string serial(reinterpret_cast<const char*>(info->SpecialInfo.stGigEInfo.chSerialNumber), 16);
       serial = serial.c_str();
       // RCLCPP_INFO(this->get_logger(), "Device: [%s]", serial.c_str());
-      //uncomment if you need all the serial nums
+      // uncomment if you need all the serial nums
       if(targetDeviceSerial == serial){
           MV_CC_CreateHandle(&camera_handle_, device_list.pDeviceInfo[i]);
           RCLCPP_INFO(this->get_logger(), "Device: [%s] is found", serial.c_str());
       }
     }
     
-    MV_CC_OpenDevice(camera_handle_);
+
+    nRet = MV_CC_OpenDevice(camera_handle_);
+    if(nRet != MV_OK){
+      RCLCPP_ERROR(this->get_logger(), "Target device not found or open failed, error code  %d", nRet);
+      rclcpp::shutdown();
+    }
 
     // Get camera infomation
     MV_CC_GetImageInfo(camera_handle_, &img_info_);

@@ -6,7 +6,7 @@ from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
-serial_numbers = ['DA3302323', 'DA2584810', 'DA2419544']
+serial_numbers = ['DA3302323', 'DA2584810', 'DA2419544', 'DA5796927', 'DA5796903', 'DA5796923', 'DA5796907']
 nodes = []
 
 def generate_launch_description():
