@@ -16,21 +16,35 @@ public:
   explicit HikCameraNode(const rclcpp::NodeOptions & options) : Node("hik_camera", options)
   {
     RCLCPP_INFO(this->get_logger(), "Starting HikCameraNode!");
+    MV_GIGE_SetEnumDevTimeout(2000);
+
+    const std::string targetDeviceSerial = this->declare_parameter("Devcie_Serial_Num", "0");
 
     MV_CC_DEVICE_INFO_LIST device_list;
     // enum device
-    nRet = MV_CC_EnumDevices(MV_USB_DEVICE, &device_list);
+    nRet = MV_CC_EnumDevices(MV_GIGE_DEVICE, &device_list);
     RCLCPP_INFO(this->get_logger(), "Found camera count = %d", device_list.nDeviceNum);
+  
 
     while (device_list.nDeviceNum == 0 && rclcpp::ok()) {
       RCLCPP_ERROR(this->get_logger(), "No camera found!");
       RCLCPP_INFO(this->get_logger(), "Enum state: [%x]", nRet);
       std::this_thread::sleep_for(std::chrono::seconds(1));
-      nRet = MV_CC_EnumDevices(MV_USB_DEVICE, &device_list);
+      nRet = MV_CC_EnumDevices(MV_GIGE_DEVICE, &device_list);
     }
 
-    MV_CC_CreateHandle(&camera_handle_, device_list.pDeviceInfo[0]);
-
+    for(unsigned int i = 0; i < device_list.nDeviceNum; i ++){
+      MV_CC_DEVICE_INFO* info = device_list.pDeviceInfo[i];
+      std::string serial(reinterpret_cast<const char*>(info->SpecialInfo.stGigEInfo.chSerialNumber), 16);
+      serial = serial.c_str();
+      // RCLCPP_INFO(this->get_logger(), "Device: [%s]", serial.c_str());
+      //uncomment if you need all the serial nums
+      if(targetDeviceSerial == serial){
+          MV_CC_CreateHandle(&camera_handle_, device_list.pDeviceInfo[i]);
+          RCLCPP_INFO(this->get_logger(), "Device: [%s] is found", serial.c_str());
+      }
+    }
+    
     MV_CC_OpenDevice(camera_handle_);
 
     // Get camera infomation
@@ -136,7 +150,7 @@ private:
     MV_CC_GetFloatValue(camera_handle_, "ExposureTime", &f_value);
     param_desc.integer_range[0].from_value = f_value.fMin;
     param_desc.integer_range[0].to_value = f_value.fMax;
-    double exposure_time = this->declare_parameter("exposure_time", 5000, param_desc);
+    double exposure_time = this->declare_parameter("exposure_time", 20000, param_desc);
     MV_CC_SetFloatValue(camera_handle_, "ExposureTime", exposure_time);
     RCLCPP_INFO(this->get_logger(), "Exposure time: %f", exposure_time);
 
