@@ -35,7 +35,7 @@ We noticed that HikSDK headers and libs are not up-to-date might cause all camer
    ```
   With every cameras' serial number.
 
-You shoud find serial number on your camera. Also, line 40 of the code could be uncommented to display all the serial numbers of connected devices.
+You shoud find serial number on your camera. Also, this line of the code could be uncommented to display all the serial numbers of connected devices:
 ```C++
 // RCLCPP_INFO(this->get_logger(), "Device: [%s]", serial.c_str());
 ```
